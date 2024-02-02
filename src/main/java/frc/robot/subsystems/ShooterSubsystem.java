@@ -18,7 +18,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class ShooterSubsystem extends SubsystemBase {
 
   private double m_speed = 0.0;
-  private boolean shoot = false;
+  private boolean shooter = false;
+  private boolean intake = false;
   private CANSparkMax masterMotor;
   private CANSparkMax followMotor1;
   private CANSparkMax followMotor2;
@@ -33,7 +34,8 @@ public class ShooterSubsystem extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
   public ShooterSubsystem() {
     m_speed = 0.0;
-    shoot = false;
+    shooter = false;
+    intake  = false;
 
     masterMotor  = new CANSparkMax(Constants.CAN.MOTOR1, MotorType.kBrushless);
     followMotor1 = new CANSparkMax(Constants.CAN.MOTOR2, MotorType.kBrushless);
@@ -44,8 +46,8 @@ public class ShooterSubsystem extends SubsystemBase {
     followMotor2.setIdleMode(IdleMode.kCoast);
 
     masterMotor.setInverted(false);
-    followMotor1.setInverted(true);
-    followMotor2.setInverted(true);
+    followMotor1.setInverted(false);
+    followMotor2.setInverted(false);
   }
 
   public void setSpeed(double speed) {
@@ -53,11 +55,19 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public void shooterOn() {
-    shoot = true;
+    shooter = true;
   }
 
   public void shooterOff() {
-    shoot = false;
+    shooter = false;
+  }
+
+  public void intakeOn() {
+    intake = true;
+  }
+
+public void intakeOff() {
+    intake = false;
   }
 
   /**
@@ -65,44 +75,60 @@ public class ShooterSubsystem extends SubsystemBase {
    *
    * @return a command
    */
-  public Command ShooterOnCommand() {
-    // Inline construction of command goes here.
-    // Subsystem::RunOnce implicitly requires `this` subsystem.
+
+  public Command ShooterCommand() {
     return runOnce(
         () -> {
           shooterOn();
-        });
+    });
   }
 
-  public Command ShooterOffCommand() {
-    // Inline construction of command goes here.
+  public Command shooterOffCommand() {
     return runOnce(
-        () -> {
-          shooterOff();
-        });
+      () -> {
+        shooterOff();
+    });
+  }
+  public Command intakeCommand() {
+    return runOnce(
+      () -> {
+        intakeOn();
+      }
+    );
+  }
+
+  public Command intakeOffCommand() {
+    return runOnce(
+      () -> {
+        intakeOff();
+      }
+    );
   }
 
   @Override
   public void periodic() {
-    if (shoot) {
-      masterMotor.set(m_speed);
+    if (shooter) {
       followMotor1.set(m_speed);
       followMotor2.set(m_speed);
     } else {
-      masterMotor.set(0.0);
       followMotor1.set(0.0);
       followMotor2.set(0.0);
+    }
+    if (intake) {
+      masterMotor.set(m_speed);
+    }else{
+      masterMotor.set(0.0);
     }
     if (useAutoStop) {
       double curr = masterMotor.getOutputCurrent();
       motorCurrent.add(curr);
-      if (shoot && (!auto_stop_active) && (curr > CURRENT_SURGE_RATIO*motorCurrent.average())) {
+      if (intake && shooter && (!auto_stop_active) && (curr > CURRENT_SURGE_RATIO*motorCurrent.average())) {
         timer.stop();
         timer.reset();
         timer.start();
         auto_stop_active = true;
       }
-      if (shoot && auto_stop_active && (timer.get() > AUTO_STOP_TIMEOUT)) {
+      if (intake && shooter && auto_stop_active && (timer.get() > AUTO_STOP_TIMEOUT)) {
         shooterOff();
         auto_stop_active = false;
       }

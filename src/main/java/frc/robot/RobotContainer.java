@@ -7,8 +7,10 @@ package frc.robot;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.ShooterSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -47,8 +49,24 @@ public class RobotContainer {
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     m_driverController.trigger()
-         .onTrue(m_shooterSubsystem.ShooterOnCommand())
-         .whileFalse(m_shooterSubsystem.ShooterOffCommand());
+         .onTrue(new SequentialCommandGroup(
+          m_shooterSubsystem.ShooterCommand(),
+          new WaitCommand(2),
+          m_shooterSubsystem.intakeCommand(),
+          new WaitCommand(1.5),
+          m_shooterSubsystem.shooterOffCommand(),
+          m_shooterSubsystem.intakeOffCommand()
+         ))
+         .whileFalse(new SequentialCommandGroup(
+          m_shooterSubsystem.shooterOffCommand(),
+          m_shooterSubsystem.intakeOffCommand()
+         ));
+    m_driverController.button(3)
+         .onTrue(m_shooterSubsystem.intakeCommand())
+         .whileFalse(m_shooterSubsystem.intakeOffCommand());
+    m_driverController.button(4)
+         .onTrue(m_shooterSubsystem.ShooterCommand())
+         .whileFalse(m_shooterSubsystem.shooterOffCommand());
   }
 
   /**
