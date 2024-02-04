@@ -7,11 +7,15 @@ package frc.robot.subsystems;
 import frc.robot.Constants;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.SparkPIDController;
+import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import frc.robot.utilities.MovingAverage;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -30,12 +34,17 @@ public class ShooterSubsystem extends SubsystemBase {
   private boolean auto_stop_active = false;
   private final double CURRENT_SURGE_RATIO = 2.0;
   private final double AUTO_STOP_TIMEOUT = 0.5;
-
+  double FF_GAIN = 0.00002;
+  double MAX_SPEED = 5500;
+  double P_GAIN = 0.00008;
   /** Creates a new ExampleSubsystem. */
+  SparkPIDController masterPid = null;
+  SparkPIDController followPid = null;
   public ShooterSubsystem() {
     m_speed = 0.0;
     shooter = false;
     intake  = false;
+
 
     masterMotor  = new CANSparkMax(Constants.CAN.MOTOR1, MotorType.kBrushless);
     followMotor1 = new CANSparkMax(Constants.CAN.MOTOR2, MotorType.kBrushless);
@@ -45,9 +54,24 @@ public class ShooterSubsystem extends SubsystemBase {
     followMotor1.setIdleMode(IdleMode.kCoast);
     followMotor2.setIdleMode(IdleMode.kCoast);
 
-    masterMotor.setInverted(false);
-    followMotor1.setInverted(false);
+    masterMotor.setInverted(true);
+    followMotor1.setInverted(true);
     followMotor2.setInverted(false);
+
+     SparkPIDController masterPid = masterMotor.getPIDController();
+     masterPid.setD(0.0);
+     masterPid.setP(P_GAIN);
+     masterPid.setI(0.0);
+     masterPid.setFF(FF_GAIN);
+     masterPid.setOutputRange(-1, 1);
+
+     SparkPIDController followPid = followMotor1.getPIDController();
+     followPid.setD(0.0);
+     followPid.setP(P_GAIN);
+     followPid.setI(0.0);
+     followPid.setFF(FF_GAIN);
+     followPid.setOutputRange(-1, 1);    
+
   }
 
   public void setSpeed(double speed) {
@@ -107,19 +131,26 @@ public void intakeOff() {
 
   @Override
   public void periodic() {
+
+    SmartDashboard.putNumber("Shooter Target", MAX_SPEED);
+    SmartDashboard.putNumber("Shooter Top", masterMotor.getEncoder().getVelocity());
+    SmartDashboard.putNumber("Shooter Bottom", masterMotor.getEncoder().getVelocity());
+    SmartDashboard.putNumber("Transfer", masterMotor.getEncoder().getVelocity());
     if (shooter) {
-      followMotor1.set(m_speed);
-      followMotor2.set(m_speed);
+
+     masterPid.setReference(MAX_SPEED,ControlType.kVelocity);
+     followPid.setReference(MAX_SPEED,ControlType.kVelocity);
+      //followMotor1.set(10.0);
     } else {
+      masterMotor.set(0.0);
       followMotor1.set(0.0);
-      followMotor2.set(0.0);
     }
     if (intake) {
-      masterMotor.set(m_speed);
+      followMotor2.set(1);
     }else{
-      masterMotor.set(0.0);
+      followMotor2.set(0.0);
     }
-    if (useAutoStop) {
+    if (false) {
       double curr = masterMotor.getOutputCurrent();
       motorCurrent.add(curr);
       if (intake && shooter && (!auto_stop_active) && (curr > CURRENT_SURGE_RATIO*motorCurrent.average())) {
