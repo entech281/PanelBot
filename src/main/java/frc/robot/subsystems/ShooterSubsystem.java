@@ -57,6 +57,10 @@ public class ShooterSubsystem extends SubsystemBase {
     followMotor1.setIdleMode(IdleMode.kCoast);
     followMotor2.setIdleMode(IdleMode.kCoast);
 
+    masterMotor.restoreFactoryDefaults();
+    followMotor1.restoreFactoryDefaults();
+    followMotor2.restoreFactoryDefaults();
+
     masterMotor.setInverted(true);
     followMotor1.setInverted(true);
     followMotor2.setInverted(false);
