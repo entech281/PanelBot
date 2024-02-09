@@ -14,7 +14,6 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import frc.robot.utilities.MovingAverage;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
