@@ -35,20 +35,23 @@ public class ShooterSubsystem extends SubsystemBase {
   private final double CURRENT_SURGE_RATIO = 2.0;
   private final double AUTO_STOP_TIMEOUT = 0.5;
   double FF_GAIN = 0.00002;
-  double MAX_SPEED = 5500;
-  double P_GAIN = 0.00008;
+  double MAX_SPEED = 11000;
+  double P_GAIN = 0.0004;
   /** Creates a new ExampleSubsystem. */
-  SparkPIDController masterPid = null;
-  SparkPIDController followPid = null;
+  SparkPIDController masterPid;
+  SparkPIDController followPid;
   public ShooterSubsystem() {
     m_speed = 0.0;
     shooter = false;
     intake  = false;
 
-
     masterMotor  = new CANSparkMax(Constants.CAN.MOTOR1, MotorType.kBrushless);
     followMotor1 = new CANSparkMax(Constants.CAN.MOTOR2, MotorType.kBrushless);
     followMotor2 = new CANSparkMax(Constants.CAN.MOTOR3, MotorType.kBrushless);
+
+    masterMotor.getEncoder().setVelocityConversionFactor(1.0);
+    followMotor1.getEncoder().setVelocityConversionFactor(1.0);
+    followMotor2.getEncoder().setVelocityConversionFactor(1.0);
 
     masterMotor.setIdleMode(IdleMode.kCoast);
     followMotor1.setIdleMode(IdleMode.kCoast);
@@ -58,19 +61,19 @@ public class ShooterSubsystem extends SubsystemBase {
     followMotor1.setInverted(true);
     followMotor2.setInverted(false);
 
-     SparkPIDController masterPid = masterMotor.getPIDController();
+     masterPid = masterMotor.getPIDController();
      masterPid.setD(0.0);
      masterPid.setP(P_GAIN);
      masterPid.setI(0.0);
      masterPid.setFF(FF_GAIN);
      masterPid.setOutputRange(-1, 1);
 
-     SparkPIDController followPid = followMotor1.getPIDController();
+     followPid = followMotor1.getPIDController();
      followPid.setD(0.0);
      followPid.setP(P_GAIN);
      followPid.setI(0.0);
      followPid.setFF(FF_GAIN);
-     followPid.setOutputRange(-1, 1);    
+     followPid.setOutputRange(-1, 1);
 
   }
 
@@ -137,11 +140,13 @@ public void intakeOff() {
     SmartDashboard.putNumber("Shooter Bottom", masterMotor.getEncoder().getVelocity());
     SmartDashboard.putNumber("Transfer", masterMotor.getEncoder().getVelocity());
     if (shooter) {
+      SmartDashboard.putNumber("Shooter Target", MAX_SPEED);
+      masterPid.setReference(MAX_SPEED, ControlType.kVelocity);
+      followPid.setReference(MAX_SPEED, ControlType.kVelocity);
 
-     masterPid.setReference(MAX_SPEED,ControlType.kVelocity);
-     followPid.setReference(MAX_SPEED,ControlType.kVelocity);
       //followMotor1.set(10.0);
     } else {
+      SmartDashboard.putNumber("Shooter Target", 0);
       masterMotor.set(0.0);
       followMotor1.set(0.0);
     }

@@ -47,7 +47,7 @@ public class RobotContainer {
     m_driverController.trigger()
          .onTrue(new SequentialCommandGroup(
           m_shooterSubsystem.ShooterCommand(),
-          new WaitCommand(2),
+          new WaitCommand(3),
           m_shooterSubsystem.intakeCommand(),
           new WaitCommand(1.5),
           m_shooterSubsystem.shooterOffCommand(),
