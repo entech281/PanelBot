@@ -14,7 +14,6 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import frc.robot.utilities.MovingAverage;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -28,15 +27,12 @@ public class ShooterSubsystem extends SubsystemBase {
   private CANSparkMax followMotor1;
   private CANSparkMax followMotor2;
 
-  private final boolean useAutoStop = false;
   private MovingAverage motorCurrent = new MovingAverage(100);
   private Timer timer = new Timer();
-  private boolean auto_stop_active = false;
-  private final double CURRENT_SURGE_RATIO = 2.0;
-  private final double AUTO_STOP_TIMEOUT = 0.5;
-  double FF_GAIN = 0.00002;
-  double MAX_SPEED = 11000;
+  double FF_GAIN = 0.00017;
+  double MAX_SPEED = 4000;
   double P_GAIN = 0.0004;
+  double I_GAIN = 0;
   /** Creates a new ExampleSubsystem. */
   SparkPIDController masterPid;
   SparkPIDController followPid;
@@ -68,14 +64,14 @@ public class ShooterSubsystem extends SubsystemBase {
      masterPid = masterMotor.getPIDController();
      masterPid.setD(0.0);
      masterPid.setP(P_GAIN);
-     masterPid.setI(0.0);
+     masterPid.setI(I_GAIN);
      masterPid.setFF(FF_GAIN);
      masterPid.setOutputRange(-1, 1);
 
      followPid = followMotor1.getPIDController();
      followPid.setD(0.0);
      followPid.setP(P_GAIN);
-     followPid.setI(0.0);
+     followPid.setI(I_GAIN);
      followPid.setFF(FF_GAIN);
      followPid.setOutputRange(-1, 1);
 
@@ -143,6 +139,7 @@ public void intakeOff() {
     SmartDashboard.putNumber("Shooter Top", masterMotor.getEncoder().getVelocity());
     SmartDashboard.putNumber("Shooter Bottom", masterMotor.getEncoder().getVelocity());
     SmartDashboard.putNumber("Transfer", masterMotor.getEncoder().getVelocity());
+    //SmartDashboard.putBoolean("Is at SetPoint", );
     if (shooter) {
       SmartDashboard.putNumber("Shooter Target", MAX_SPEED);
       masterPid.setReference(MAX_SPEED, ControlType.kVelocity);
@@ -158,20 +155,6 @@ public void intakeOff() {
       followMotor2.set(1);
     }else{
       followMotor2.set(0.0);
-    }
-    if (false) {
-      double curr = masterMotor.getOutputCurrent();
-      motorCurrent.add(curr);
-      if (intake && shooter && (!auto_stop_active) && (curr > CURRENT_SURGE_RATIO*motorCurrent.average())) {
-        timer.stop();
-        timer.reset();
-        timer.start();
-        auto_stop_active = true;
-      }
-      if (intake && shooter && auto_stop_active && (timer.get() > AUTO_STOP_TIMEOUT)) {
-        shooterOff();
-        auto_stop_active = false;
-      }
     }
   }
 

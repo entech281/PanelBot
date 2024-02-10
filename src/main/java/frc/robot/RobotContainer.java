@@ -41,22 +41,25 @@ public class RobotContainer {
    * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
    * joysticks}.
    */
+
+   public Command cycleShooterCommand() {
+    return new SequentialCommandGroup(
+          m_shooterSubsystem.ShooterCommand(),
+          new WaitCommand(3),
+          m_shooterSubsystem.intakeCommand(),
+          new WaitCommand(3),
+          m_shooterSubsystem.intakeOffCommand(),
+          m_shooterSubsystem.shooterOffCommand()
+        );
+   }
+
   private void configureBindings() {
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     m_driverController.trigger()
-         .onTrue(new SequentialCommandGroup(
-          m_shooterSubsystem.ShooterCommand(),
-          new WaitCommand(3),
-          m_shooterSubsystem.intakeCommand(),
-          new WaitCommand(1.5),
-          m_shooterSubsystem.shooterOffCommand(),
-          m_shooterSubsystem.intakeOffCommand()
-         ))
-         .whileFalse(new SequentialCommandGroup(
-          m_shooterSubsystem.shooterOffCommand(),
-          m_shooterSubsystem.intakeOffCommand()
-         ));
+         .onTrue(new SequentialCommandGroup(cycleShooterCommand(),
+         m_shooterSubsystem.shooterOffCommand(),
+         m_shooterSubsystem.intakeOffCommand()));
     m_driverController.button(3)
          .onTrue(m_shooterSubsystem.intakeCommand())
          .whileFalse(m_shooterSubsystem.intakeOffCommand());
