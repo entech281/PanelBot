@@ -47,7 +47,7 @@ public class RobotContainer {
           m_shooterSubsystem.ShooterCommand(),
           new WaitCommand(3),
           m_shooterSubsystem.intakeCommand(),
-          new WaitCommand(1),
+          new WaitCommand(3),
           m_shooterSubsystem.intakeOffCommand(),
           m_shooterSubsystem.shooterOffCommand()
         );
